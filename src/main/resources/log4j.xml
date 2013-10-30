@@ -37,10 +37,4 @@
     <appender-ref ref="STREAM_PROCESSOR"/>
   </logger>
 
-
-  <root>
-    <level value="info" />
-    <appender-ref ref="ALL" />
-  </root>
-
 </log4j:configuration>
