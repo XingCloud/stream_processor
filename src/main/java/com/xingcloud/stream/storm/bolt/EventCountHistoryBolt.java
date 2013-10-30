@@ -32,7 +32,7 @@ public class EventCountHistoryBolt extends BaseBasicBolt {
     String pid = (String)tuple.getValue(0);
     String event = (String)tuple.getValue(1);
     long ts = (Long)tuple.getValue(2);
-    long date = TimeUtil.getDate(ts);
+    long date = TimeUtil.getDay(ts);
     ecu.addEvent(pid, event, date);
     LOG.debug("Update count " + pid + "\t" + event + "\t" + date);
 

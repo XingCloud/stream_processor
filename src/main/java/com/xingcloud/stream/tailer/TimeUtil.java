@@ -26,7 +26,7 @@ public class TimeUtil {
      * @return
      */
     static public long getDate(long timestamp) {
-        final SimpleDateFormat DF = new SimpleDateFormat("yyyyMMdd");
+        final SimpleDateFormat DF = new SimpleDateFormat("yyyyMMddHHmmss");
         DF.setTimeZone(TZ);
         Date date = new Date(timestamp);
         return Long.valueOf(DF.format(date));
