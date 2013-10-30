@@ -9,9 +9,12 @@ import backtype.storm.tuple.Values;
 import com.xingcloud.stream.model.StreamLogContent;
 import com.xingcloud.stream.queue.NativeQueue;
 import com.xingcloud.stream.storm.StreamProcessorConstants;
+import com.xingcloud.stream.tailer.StreamLogTailer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.UUID;
 
@@ -34,6 +37,27 @@ public class StreamLogReadSpout extends BaseRichSpout {
   public void open(Map map, TopologyContext topologyContext, SpoutOutputCollector spoutOutputCollector) {
     this._collector = spoutOutputCollector;
     this.id = UUID.randomUUID().toString();
+
+    Thread tailerThread = new Thread() {
+      @Override
+      public synchronized void run() {
+        StreamLogTailer streamLogTailer = new StreamLogTailer(StreamLogTailer.configPath);
+        try {
+          streamLogTailer.start();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+    };
+    tailerThread.start();
+    try {
+      InetAddress address = InetAddress.getLocalHost();
+      LOG.info("Init stream log tailer thread finish. Host: " + address.getHostName());
+    } catch (UnknownHostException e) {
+      e.printStackTrace();
+      LOG.error(e);
+    }
+
     LOG.info("[SPOUT] - Spout inited(" + this.id + ").");
   }
 

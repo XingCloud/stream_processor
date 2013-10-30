@@ -31,20 +31,6 @@ public class StreamLogEventCountTopology {
 
     TopologyBuilder builder = new TopologyBuilder();
 
-    Thread tailerThread = new Thread() {
-      @Override
-      public synchronized void run() {
-        StreamLogTailer streamLogTailer = new StreamLogTailer(StreamLogTailer.configPath);
-        try {
-          streamLogTailer.start();
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-      }
-    };
-    tailerThread.start();
-    LOG.info("Init stream log tailer thread finish.");
-
     builder.setSpout(toSpoutId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.spoutName), new StreamLogReadSpout(), 4);
     builder.setBolt(toBoltId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.shuffleBoltName), new ShuffleBolt(), 4)
             .shuffleGrouping(toSpoutId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.spoutName));
