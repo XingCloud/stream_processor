@@ -1,45 +1,62 @@
 package com.xingcloud.stream.storm.topology;
 
-import static com.xingcloud.stream.StreamProcessorUtils.toBoltId;
-import static com.xingcloud.stream.StreamProcessorUtils.toSpoutId;
-import static com.xingcloud.stream.StreamProcessorUtils.toTopologyId;
+import static com.xingcloud.stream.storm.StreamProcessorUtils.toBoltId;
+import static com.xingcloud.stream.storm.StreamProcessorUtils.toSpoutId;
+import static com.xingcloud.stream.storm.StreamProcessorUtils.toTopologyId;
 
 import backtype.storm.Config;
 import backtype.storm.generated.StormTopology;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
+import com.xingcloud.stream.storm.StreamProcessorConstants;
 import com.xingcloud.stream.storm.bolt.EventCountHistoryBolt;
-import com.xingcloud.stream.storm.bolt.StreamLogDispatchBolt;
+import com.xingcloud.stream.storm.bolt.ShuffleBolt;
 import com.xingcloud.stream.storm.spout.StreamLogReadSpout;
-import org.apache.log4j.Logger;
+import com.xingcloud.stream.tailer.StreamLogTailer;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * User: Z J Wu Date: 13-10-22 Time: 上午10:57 Package: com.xingcloud.storm.topology
  */
 public class StreamLogEventCountTopology extends BaseTopology {
-  private static final Logger LOGGER = Logger.getLogger(StreamLogEventCountTopology.class);
+  private static final Log LOG = LogFactory.getLog(StreamLogEventCountTopology.class);
 
   private static boolean debug = true;
 
   public static void main(String[] args) throws InterruptedException {
-    String topoKeyword = "event_count";
-    String spoutName = "stream_log_tail_receiver";
-    String dispatchBolt = "LogDispatcher";
-    String historyCounterBoltName = "history_counter";
+
     TopologyBuilder builder = new TopologyBuilder();
 
-    builder.setSpout(toSpoutId(topoKeyword, spoutName), new StreamLogReadSpout(), 2);
-    builder.setBolt(toBoltId(topoKeyword, dispatchBolt), new StreamLogDispatchBolt())
-           .shuffleGrouping(toSpoutId(topoKeyword, spoutName));
-    builder.setBolt(toBoltId(topoKeyword, historyCounterBoltName), new EventCountHistoryBolt())
-           .fieldsGrouping(toBoltId(topoKeyword, dispatchBolt), "count_history", new Fields("count_history"));
+    Thread tailerThread = new Thread() {
+      @Override
+      public synchronized void run() {
+        StreamLogTailer streamLogTailer = new StreamLogTailer(StreamLogTailer.configPath);
+        try {
+          streamLogTailer.start();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+    };
+    tailerThread.start();
+    LOG.info("Init stream log tailer thread finish.");
 
-    Config conf = new Config();
-    conf.put("debug", false);
+    builder.setSpout(toSpoutId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.spoutName), new StreamLogReadSpout(), 4);
+    builder.setBolt(toBoltId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.shuffleBoltName), new ShuffleBolt(), 4)
+            .shuffleGrouping(toSpoutId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.spoutName));
+    builder.setBolt(toBoltId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.historyCounterBoltName),
+            new EventCountHistoryBolt(), 4)
+            .fieldsGrouping(toBoltId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.shuffleBoltName),
+                    new Fields(StreamProcessorConstants.PID, StreamProcessorConstants.EVENT_NAME));
+
+
     StormTopology topology = builder.createTopology();
-    LOGGER.info("[TOPOLOGY] - Topoloty(" + topoKeyword + ") created.");
+    LOG.info("[TOPOLOGY] - Topoloty(" + StreamProcessorConstants.topoKeyword + ") created.");
     if (debug) {
-      runTopologyLocal(toTopologyId(topoKeyword), conf, topology, 0);
+      Config conf = new Config();
+      conf.setDebug(true);
+      runTopologyLocal(toTopologyId(StreamProcessorConstants.topoKeyword), conf, topology);
     } else {
 
     }

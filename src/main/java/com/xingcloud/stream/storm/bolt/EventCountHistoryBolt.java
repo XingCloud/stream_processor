@@ -1,44 +1,45 @@
 package com.xingcloud.stream.storm.bolt;
 
-import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.BasicOutputCollector;
 import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Tuple;
 import com.xingcloud.stream.model.EventCounterUpdater;
 import com.xingcloud.stream.model.StreamLogContent;
-import org.apache.log4j.Logger;
+import com.xingcloud.stream.tailer.TimeUtil;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.Map;
 
-/**
- * User: Z J Wu Date: 13-10-22 Time: 上午9:55 Package: com.xingcloud.storm.bolt
- */
-public class EventCountHistoryBolt extends BaseEventCountBolt {
-  private static final Logger LOGGER = Logger.getLogger(EventCountHistoryBolt.class);
+
+public class EventCountHistoryBolt extends BaseBasicBolt {
+  private static final Log LOG = LogFactory.getLog(EventCountHistoryBolt.class);
+
+  private EventCounterUpdater ecu = new EventCounterUpdater();
+
+  @Override
+  public void prepare(Map stormConf, TopologyContext context) {
+    Thread ecuThread = new Thread(ecu);
+    ecuThread.start();
+    LOG.info("EventCountHistoryBolt init bolt finish!");
+    super.prepare(stormConf, context);
+  }
+
+  @Override
+  public void execute(Tuple tuple, BasicOutputCollector basicOutputCollector) {
+    String pid = (String)tuple.getValue(0);
+    String event = (String)tuple.getValue(1);
+    long ts = (Long)tuple.getValue(2);
+    long date = TimeUtil.getDate(ts);
+    ecu.addEvent(pid, event, date);
+    LOG.debug("Update count " + pid + "\t" + event + "\t" + date);
+
+  }
 
   @Override
   public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-  }
-
-  @Override
-  public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
-    this.collector = outputCollector;
-  }
-
-  @Override
-  public void execute(Tuple tuple) {
-    StreamLogContent slc = (StreamLogContent) tuple.getValue(0);
-    String k = slc.toKey();
-    EventCounterUpdater ec = counter.get(k);
-    if (ec == null) {
-      counter.put(k, new EventCounterUpdater(slc));
-    } else {
-      ec.update(slc.getEventValue(), slc.getTimestamp());
-    }
-    for (Map.Entry<String, EventCounterUpdater> entry : counter.entrySet()) {
-      LOGGER.info("[BOLT]: " + entry.getValue());
-    }
-    collector.ack(tuple);
-//    LOGGER.info("[BOLT] - Historical counter received SLC - " + slc);
+    //No output
   }
 }

@@ -1,6 +1,6 @@
 package com.xingcloud.stream.model;
 
-import static com.xingcloud.stream.StreamProcessorConstants.EVENT_LOG_SEPARATOR;
+import static com.xingcloud.stream.storm.StreamProcessorConstants.EVENT_LOG_SEPARATOR;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -126,10 +126,6 @@ public class StreamLogContent implements Serializable {
 
   public static boolean isStremLogContent(Object obj) {
     return obj instanceof StreamLogContent;
-  }
-
-  public String toKey() {
-    return this.projectId + '|' + this.event;
   }
 
   public static void main(String[] args) {

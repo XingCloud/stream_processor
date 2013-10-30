@@ -1,6 +1,6 @@
-package com.xingcloud.stream;
+package com.xingcloud.stream.storm;
 
-import static com.xingcloud.stream.StreamProcessorConstants.NAME_SEPARATOR;
+import static com.xingcloud.stream.storm.StreamProcessorConstants.NAME_SEPARATOR;
 
 /**
  * User: Z J Wu Date: 13-10-23 Time: 下午3:59 Package: com.xingcloud.storm

@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>test_storm</groupId>
-  <artifactId>test_storm</artifactId>
+  <groupId>stream_processor</groupId>
+  <artifactId>stream_processor</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <repositories>
@@ -59,6 +59,41 @@
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
       <version>1.2.17</version>
+    </dependency>
+      <dependency>
+          <groupId>com.xingcloud.xa</groupId>
+          <artifactId>mongodb</artifactId>
+          <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.xingcloud.xa</groupId>
+      <artifactId>confutil</artifactId>
+      <exclusions>
+        <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging-api</artifactId>
+        </exclusion>
+      </exclusions>
+      <version>1.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.xingcloud.xa</groupId>
+      <artifactId>hashutil</artifactId>
+      <exclusions>
+          <exclusion>
+              <groupId>commons-logging</groupId>
+              <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>commons-logging</groupId>
+              <artifactId>commons-logging-api</artifactId>
+          </exclusion>
+      </exclusions>
+      <version>1.2</version>
     </dependency>
   </dependencies>
 
