@@ -5,9 +5,14 @@ import static com.xingcloud.stream.storm.StreamProcessorUtils.toSpoutId;
 import static com.xingcloud.stream.storm.StreamProcessorUtils.toTopologyId;
 
 import backtype.storm.Config;
+import backtype.storm.LocalCluster;
+import backtype.storm.StormSubmitter;
+import backtype.storm.generated.AlreadyAliveException;
+import backtype.storm.generated.InvalidTopologyException;
 import backtype.storm.generated.StormTopology;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
+import backtype.storm.utils.Utils;
 import com.xingcloud.stream.storm.StreamProcessorConstants;
 import com.xingcloud.stream.storm.bolt.EventCountHistoryBolt;
 import com.xingcloud.stream.storm.bolt.ShuffleBolt;
@@ -19,12 +24,10 @@ import org.apache.commons.logging.LogFactory;
 /**
  * User: Z J Wu Date: 13-10-22 Time: 上午10:57 Package: com.xingcloud.storm.topology
  */
-public class StreamLogEventCountTopology extends BaseTopology {
+public class StreamLogEventCountTopology {
   private static final Log LOG = LogFactory.getLog(StreamLogEventCountTopology.class);
 
-  private static boolean debug = true;
-
-  public static void main(String[] args) throws InterruptedException {
+  public static void main(String[] args) throws InterruptedException, AlreadyAliveException, InvalidTopologyException {
 
     TopologyBuilder builder = new TopologyBuilder();
 
@@ -53,13 +56,20 @@ public class StreamLogEventCountTopology extends BaseTopology {
 
     StormTopology topology = builder.createTopology();
     LOG.info("[TOPOLOGY] - Topoloty(" + StreamProcessorConstants.topoKeyword + ") created.");
-    if (debug) {
-      Config conf = new Config();
-      conf.setDebug(true);
-      runTopologyLocal(toTopologyId(StreamProcessorConstants.topoKeyword), conf, topology);
+    Config conf = new Config();
+    conf.setDebug(true);
+    if (args != null && args.length > 0 && args[0].equals(StreamProcessorConstants.topoKeyword)) {
+      conf.setNumWorkers(4);
+      StormSubmitter.submitTopology(args[0], conf, topology);
     } else {
-
+      LocalCluster cluster = new LocalCluster();
+      cluster.submitTopology(StreamProcessorConstants.topoKeyword, conf, topology);
+      Utils.sleep(10*1000);
+      cluster.shutdown();
+      LOG.info("CLuster was killed...");
+      cluster.shutdown();
     }
+
   }
 
 }
