@@ -2,8 +2,6 @@ package com.xingcloud.stream.model;
 
 import static com.xingcloud.stream.storm.StreamProcessorConstants.EVENT_LOG_SEPARATOR;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.io.Serializable;
 
 /**
@@ -110,15 +108,16 @@ public class StreamLogContent implements Serializable {
   }
 
   public static StreamLogContent build(String stringLog) {
-    String s = StringUtils.trimToNull(stringLog);
-    if (StringUtils.isBlank(s)) {
+    if (stringLog == null) {
       return null;
     }
+
     int defaultLogLength = 5, startPosition = 0, idx;
     String[] arr = new String[defaultLogLength];
     for (int i = 0; i < defaultLogLength; i++) {
-      idx = s.indexOf(EVENT_LOG_SEPARATOR, startPosition);
-      arr[i] = idx < 0 ? s.substring(startPosition, s.length()) : s.substring(startPosition, idx);
+      idx = stringLog.indexOf(EVENT_LOG_SEPARATOR, startPosition);
+      arr[i] = idx < 0 ? stringLog.substring(startPosition,
+              stringLog.length()) : stringLog.substring(startPosition, idx);
       startPosition = idx + 1;
     }
     return new StreamLogContent(arr[0], arr[2], Long.valueOf(arr[3]), Long.valueOf(arr[4]));

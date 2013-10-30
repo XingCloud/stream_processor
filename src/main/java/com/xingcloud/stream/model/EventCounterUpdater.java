@@ -5,14 +5,12 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.xingcloud.mongo.MongoDBManager;
 import com.xingcloud.stream.storm.StreamProcessorConstants;
-import com.xingcloud.stream.tailer.TimeUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class EventCounterUpdater implements Runnable, Serializable{
