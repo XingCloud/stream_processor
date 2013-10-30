@@ -145,19 +145,17 @@ public class EventCounterUpdater implements Runnable, Serializable{
   public void run() {
     LOG.info("Start mongodb update thread " + Thread.currentThread().getName());
     while (true) {
-      try {
         if (((System.currentTimeMillis()-lastFlushTime)>FLUSH_INTERVAL && eventCounterMap.size()!=0) ||
                 (totalEventNum > FLUSH_KEY_SIZE)) {
           printMap();
           flushToMongo();
           lastFlushTime = System.currentTimeMillis();
         }
-        Thread.sleep(SLEEP_INTERVAL);
-      } catch (Exception e) {
-        e.printStackTrace();
-        LOG.error(e);
-      }
-
+        try {
+          Thread.sleep(SLEEP_INTERVAL);
+        } catch (InterruptedException e) {
+          e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
     }
   }
 
