@@ -16,7 +16,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class EventCounterUpdater implements Runnable, Serializable{
   private static Log LOG = LogFactory.getLog(EventCounterUpdater.class);
 
-  private static final int FLUSH_KEY_SIZE = 5000;
+  private static final int FLUSH_KEY_SIZE = 0;
   private static final long FLUSH_INTERVAL = 5 * 60 * 1000;
   private static final long SLEEP_INTERVAL = 1000;
 
@@ -150,6 +150,7 @@ public class EventCounterUpdater implements Runnable, Serializable{
                 (totalEventNum > FLUSH_KEY_SIZE)) {
           printMap();
           flushToMongo();
+          lastFlushTime = System.currentTimeMillis();
         }
         Thread.sleep(SLEEP_INTERVAL);
       } catch (Exception e) {
