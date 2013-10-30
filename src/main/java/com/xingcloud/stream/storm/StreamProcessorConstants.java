@@ -14,6 +14,7 @@ public class StreamProcessorConstants {
   public static final String EVENT_NAME = "event_name";
   public static final String PID = "pid";
   public static final String TS = "ts";
+  public static final String DATE = "date";
 
   public static final String EVENT_COUNTER_DB = "user_info";
   public static final String EVENT_COUNTER_COLL = "event_count";
