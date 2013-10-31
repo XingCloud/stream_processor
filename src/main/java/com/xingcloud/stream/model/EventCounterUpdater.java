@@ -31,7 +31,7 @@ public class EventCounterUpdater implements Runnable, Serializable{
   }
 
   private void init() {
-    PropertyConfigurator.configure("/data/log/stream_config/log4j.xml");
+    PropertyConfigurator.configure("/data/log/stream_config/sp.xml");
   }
 
   public long addEvent(String pid, String event, long date) {
