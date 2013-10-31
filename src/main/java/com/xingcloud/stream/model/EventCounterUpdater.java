@@ -31,7 +31,7 @@ public class EventCounterUpdater implements Runnable, Serializable{
   }
 
   private void init() {
-    PropertyConfigurator.configure("/usr/local/storm-0.8.1/log4j/storm.log.properties");
+    PropertyConfigurator.configure("/data/log/stream_config/log4j.xml");
   }
 
   public long addEvent(String pid, String event, long date) {
