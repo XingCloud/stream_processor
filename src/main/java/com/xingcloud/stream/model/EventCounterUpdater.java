@@ -7,6 +7,7 @@ import com.xingcloud.mongo.MongoDBManager;
 import com.xingcloud.stream.storm.StreamProcessorConstants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.PropertyConfigurator;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -24,6 +25,14 @@ public class EventCounterUpdater implements Runnable, Serializable{
   private long lastFlushTime = System.currentTimeMillis();
   private Map<String, Map<Long, Map<String, Long>>> eventCounterMap = new HashMap<String, Map<Long, Map<String, Long>>>();
   private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
+  public EventCounterUpdater() {
+    init();
+  }
+
+  private void init() {
+    PropertyConfigurator.configure("/usr/local/storm-0.8.1/log4j/storm.log.properties");
+  }
 
   public long addEvent(String pid, String event, long date) {
     long current = 0;
