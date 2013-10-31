@@ -8,17 +8,15 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import com.xingcloud.stream.model.EventCounterUpdater;
-import com.xingcloud.stream.model.StreamLogContent;
 import com.xingcloud.stream.storm.StreamProcessorConstants;
 import com.xingcloud.stream.tailer.TimeUtil;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 
 import java.util.Map;
 
 
 public class EventCountHistoryBolt extends BaseBasicBolt {
-  private static final Log LOG = LogFactory.getLog(EventCountHistoryBolt.class);
+  private static final Logger logger = Logger.getLogger(EventCountHistoryBolt.class);
 
   private EventCounterUpdater ecu = new EventCounterUpdater();
 
@@ -26,7 +24,7 @@ public class EventCountHistoryBolt extends BaseBasicBolt {
   public void prepare(Map stormConf, TopologyContext context) {
     Thread ecuThread = new Thread(ecu);
     ecuThread.start();
-    LOG.info("EventCountHistoryBolt init bolt finish!");
+    logger.info("EventCountHistoryBolt init bolt finish!");
     super.prepare(stormConf, context);
   }
 
@@ -39,7 +37,7 @@ public class EventCountHistoryBolt extends BaseBasicBolt {
     ecu.addEvent(pid, event, date);
     Values values = new Values(pid, event, date);
     collector.emit(values);
-    LOG.debug("Update count " + pid + "\t" + event + "\t" + date);
+    logger.debug("Update count " + pid + "\t" + event + "\t" + date);
 
   }
 

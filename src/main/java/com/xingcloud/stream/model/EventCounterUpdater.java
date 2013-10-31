@@ -5,9 +5,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.xingcloud.mongo.MongoDBManager;
 import com.xingcloud.stream.storm.StreamProcessorConstants;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.PropertyConfigurator;
+import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -15,7 +13,7 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class EventCounterUpdater implements Runnable, Serializable{
-  private static Log LOG = LogFactory.getLog(EventCounterUpdater.class);
+  private static Logger logger = Logger.getLogger(EventCounterUpdater.class);
 
   private static final int FLUSH_KEY_SIZE = 0;
   private static final long FLUSH_INTERVAL = 5 * 60 * 1000;
@@ -27,11 +25,6 @@ public class EventCounterUpdater implements Runnable, Serializable{
   private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
   public EventCounterUpdater() {
-    init();
-  }
-
-  private void init() {
-    PropertyConfigurator.configure("/data/log/stream_config/sp.xml");
   }
 
   public long addEvent(String pid, String event, long date) {
@@ -63,7 +56,7 @@ public class EventCounterUpdater implements Runnable, Serializable{
           }
         }
       }
-      LOG.debug("Current event number: " + totalEventNum);
+      logger.debug("Current event number: " + totalEventNum);
     } finally {
       lock.writeLock().unlock();
     }
@@ -73,7 +66,7 @@ public class EventCounterUpdater implements Runnable, Serializable{
   public void flushToMongo() {
     try {
       lock.writeLock().lock();
-      LOG.info("Start to update mongodb. Current event number: " + totalEventNum);
+      logger.info("--------- Start to update mongodb. Current event number: " + totalEventNum + " ---------");
       long st = System.nanoTime();
       DBCollection coll = MongoDBManager.getInstance().getDB()
               .getCollection(StreamProcessorConstants.EVENT_COUNTER_COLL);
@@ -92,10 +85,10 @@ public class EventCounterUpdater implements Runnable, Serializable{
         }
       }
       cleanUp();
-      LOG.info("Update event count value to MongoDB finish. Taken: " + (System.nanoTime()-st)/1.0e9 + " sec");
+      logger.info("Update event count value to MongoDB finish. Taken: " + (System.nanoTime()-st)/1.0e9 + " sec");
     } catch (Exception e) {
       e.printStackTrace();
-      LOG.error(e);
+      logger.error(e);
     } finally {
       lock.writeLock().unlock();
     }
@@ -109,7 +102,7 @@ public class EventCounterUpdater implements Runnable, Serializable{
   private void updateMongo(String pid, long date, String event, long count, DBCollection coll) {
     BasicDBObject searchQuery = getSearchQuery(pid, event, date);
     BasicDBObject updateQuery = getUpdateQuery(count);
-    LOG.debug("Update json: " + searchQuery + "\t" + updateQuery);
+    logger.debug("Update json: " + searchQuery + "\t" + updateQuery);
     coll.update(searchQuery, updateQuery, true, false);
   }
 
@@ -147,12 +140,12 @@ public class EventCounterUpdater implements Runnable, Serializable{
         }
       }
     }
-    LOG.info(summary.toString());
+    logger.info(summary.toString());
   }
 
   @Override
   public void run() {
-    LOG.info("Start mongodb update thread " + Thread.currentThread().getName());
+    logger.info("Start mongodb update thread " + Thread.currentThread().getName());
     while (true) {
         if (((System.currentTimeMillis()-lastFlushTime)>FLUSH_INTERVAL && eventCounterMap.size()!=0) ||
                 (totalEventNum > FLUSH_KEY_SIZE)) {
@@ -163,7 +156,8 @@ public class EventCounterUpdater implements Runnable, Serializable{
         try {
           Thread.sleep(SLEEP_INTERVAL);
         } catch (InterruptedException e) {
-          e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+          e.printStackTrace();
+          logger.error(e);
         }
     }
   }

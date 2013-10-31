@@ -2,7 +2,6 @@ package com.xingcloud.stream.storm.topology;
 
 import static com.xingcloud.stream.storm.StreamProcessorUtils.toBoltId;
 import static com.xingcloud.stream.storm.StreamProcessorUtils.toSpoutId;
-import static com.xingcloud.stream.storm.StreamProcessorUtils.toTopologyId;
 
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
@@ -17,15 +16,13 @@ import com.xingcloud.stream.storm.StreamProcessorConstants;
 import com.xingcloud.stream.storm.bolt.EventCountHistoryBolt;
 import com.xingcloud.stream.storm.bolt.ShuffleBolt;
 import com.xingcloud.stream.storm.spout.StreamLogReadSpout;
-import com.xingcloud.stream.tailer.StreamLogTailer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 
 /**
  * User: Z J Wu Date: 13-10-22 Time: 上午10:57 Package: com.xingcloud.storm.topology
  */
 public class StreamLogEventCountTopology {
-  private static final Log LOG = LogFactory.getLog(StreamLogEventCountTopology.class);
+  private static final Logger logger = Logger.getLogger(StreamLogEventCountTopology.class);
 
   public static void main(String[] args) throws InterruptedException, AlreadyAliveException, InvalidTopologyException {
 
@@ -41,7 +38,7 @@ public class StreamLogEventCountTopology {
 
 
     StormTopology topology = builder.createTopology();
-    LOG.info("[TOPOLOGY] - Topoloty(" + StreamProcessorConstants.topoKeyword + ") created.");
+    logger.info("[TOPOLOGY] - Topoloty(" + StreamProcessorConstants.topoKeyword + ") created.");
     Config conf = new Config();
     conf.setDebug(true);
     if (args != null && args.length > 0 && args[0].equals(StreamProcessorConstants.topoKeyword)) {
@@ -52,7 +49,7 @@ public class StreamLogEventCountTopology {
       cluster.submitTopology(StreamProcessorConstants.topoKeyword, conf, topology);
       Utils.sleep(10*1000);
       cluster.shutdown();
-      LOG.info("CLuster was killed...");
+      logger.info("CLuster was killed...");
       cluster.shutdown();
     }
 

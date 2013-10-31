@@ -12,6 +12,7 @@ import com.xingcloud.stream.storm.StreamProcessorConstants;
 import com.xingcloud.stream.tailer.StreamLogTailer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -23,7 +24,7 @@ import java.util.UUID;
  */
 public class StreamLogReadSpout extends BaseRichSpout {
 
-  private static final Log LOG = LogFactory.getLog(StreamLogReadSpout.class);
+  private static final Logger logger = Logger.getLogger(StreamLogReadSpout.class);
 
   private SpoutOutputCollector _collector;
 
@@ -52,13 +53,13 @@ public class StreamLogReadSpout extends BaseRichSpout {
     tailerThread.start();
     try {
       InetAddress address = InetAddress.getLocalHost();
-      LOG.info("Init stream log tailer thread finish. Host: " + address.getHostName());
+      logger.info("Init stream log tailer thread finish. Host: " + address.getHostName());
     } catch (UnknownHostException e) {
       e.printStackTrace();
-      LOG.error(e);
+      logger.error(e);
     }
 
-    LOG.info("[SPOUT] - Spout inited(" + this.id + ").");
+    logger.info("[SPOUT] - Spout inited(" + this.id + ").");
   }
 
   @Override
@@ -72,7 +73,7 @@ public class StreamLogReadSpout extends BaseRichSpout {
 
   @Override
   public void fail(Object msgId) {
-    LOG.error("[SPOUT] Message failed, put it to queue again.");
+    logger.error("[SPOUT] Message failed, put it to queue again.");
   }
 
 
