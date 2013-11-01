@@ -2,8 +2,7 @@ package com.xingcloud.stream.tailer;
 
 import com.xingcloud.stream.model.StreamLogContent;
 import com.xingcloud.stream.queue.NativeQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +15,7 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public class StreamLogTailer extends Tail{
-  private static Log LOG = LogFactory.getLog(StreamLogTailer.class);
+  private static Logger logger = Logger.getLogger(StreamLogTailer.class);
 
   public static final String configPath = "/data/log/stream_config/";
   private int MAX_SIZE = 20000;
@@ -28,26 +27,35 @@ public class StreamLogTailer extends Tail{
 
   @Override
   public void send(List<String> logs, long day) {
-    LOG.info("Tail stream log size: " + logs.size() + "\tDay: " + day);
+    logger.info("Tail stream log size: " + logs.size() + "\tDay: " + day);
     List<StreamLogContent> events = new ArrayList<StreamLogContent>();
     for (String line : logs) {
       try {
         StreamLogContent log = StreamLogContent.build(line);
-        events.add(log);
+        boolean filter = filterOut(log);
+        if (!filter) {
+          events.add(log);
+        } else {
+          logger.warn("Invalid date: " + log);
+        }
       } catch (Exception e) {
         e.printStackTrace();
       }
     }
     NativeQueue.getInstance().addAll(events);
     while (NativeQueue.getInstance().size() > MAX_SIZE) {
-      LOG.info("Queue size(" + NativeQueue.getInstance().size() + ") is greater than " + MAX_SIZE + ", sleep for " + SLEEP_INTERVAL + " ms");
+      logger.warn("Queue size(" + NativeQueue.getInstance().size() + ") is greater than " + MAX_SIZE + ", sleep for " + SLEEP_INTERVAL + " ms");
       try {
         Thread.sleep(SLEEP_INTERVAL);
       } catch (InterruptedException e) {
         e.printStackTrace();
-        LOG.error(e);
+        logger.error(e);
       }
     }
+  }
 
+  private boolean filterOut(StreamLogContent log) {
+    long logDay = TimeUtil.getDay(log.getTimestamp());
+    return logDay != this.day;
   }
 }
