@@ -16,5 +16,6 @@
   
 停止服务: sh /usr/local/storm-0.8.1/bin/stop.sh 
 
-启动event counter: /usr/local/storm-0.8.1/bin/storm jar /home/hadoop/git_project_home/stream_processor/target/stream_processor-1.0-SNAPSHOT.jar com.xingcloud.stream.storm.topology.StreamLogEventCountTopology event_counter
-     
+启动event counter: /usr/local/storm-0.8.1/bin/storm jar
+  /home/hadoop/git_project_home/stream_processor/dist/stream_processor-jar-with-dependencies.jar
+  com.xingcloud.stream.storm.topology.StreamLogEventCountTopology event_counter

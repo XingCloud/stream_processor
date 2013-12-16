@@ -15,7 +15,6 @@ import org.apache.log4j.Logger;
  * User: Wang Yufei
  * Date: 13-10-29
  * Time: 下午11:58
- * To change this template use File | Settings | File Templates.
  */
 public class ShuffleBolt extends BaseBasicBolt {
   private static Logger logger = Logger.getLogger(ShuffleBolt.class);
@@ -26,10 +25,17 @@ public class ShuffleBolt extends BaseBasicBolt {
     Values values = new Values(log.getProjectId(), log.getEvent(), log.getTimestamp());
     collector.emit(values);
     logger.debug("Emit " + log.getProjectId() + "\t" + log.getEvent() + "\t" + log.getTimestamp());
+    //todo: no ack?
   }
 
   @Override
   public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-    outputFieldsDeclarer.declare(new Fields(StreamProcessorConstants.PID, StreamProcessorConstants.EVENT_NAME, StreamProcessorConstants.TS));
+    outputFieldsDeclarer.declare(
+      new Fields(
+        StreamProcessorConstants.PID,
+        StreamProcessorConstants.EVENT_NAME,
+        StreamProcessorConstants.TS
+      )
+    );
   }
 }

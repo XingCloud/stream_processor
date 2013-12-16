@@ -21,6 +21,7 @@ public class EventCounterUpdater implements Runnable, Serializable{
 
   private long totalEventNum = 0l;
   private long lastFlushTime = System.currentTimeMillis();
+  // project id -> (date -> (event -> count))
   private Map<String, Map<Long, Map<String, Long>>> eventCounterMap = new HashMap<String, Map<Long, Map<String, Long>>>();
   private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -112,6 +113,7 @@ public class EventCounterUpdater implements Runnable, Serializable{
     for (int i=0; i<fields.length; i++) {
       searchQuery.put("l"+i, fields[i]);
     }
+    //todo: 查询条件不准确
     searchQuery.put("date", date);
     searchQuery.put("project_id", pid);
     return searchQuery;

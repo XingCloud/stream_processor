@@ -12,7 +12,6 @@ import java.util.List;
  * User: Wang Yufei
  * Date: 13-10-28
  * Time: 下午5:04
- * To change this template use File | Settings | File Templates.
  */
 public class StreamLogTailer extends Tail{
   private static Logger logger = Logger.getLogger(StreamLogTailer.class);
@@ -30,16 +29,15 @@ public class StreamLogTailer extends Tail{
     logger.info("Tail stream log size: " + logs.size() + "\tDay: " + day);
     List<StreamLogContent> events = new ArrayList<StreamLogContent>();
     for (String line : logs) {
+      //todo: why try?
       try {
         StreamLogContent log = StreamLogContent.build(line);
         boolean filter = filterOut(log);
         if (!filter) {
           events.add(log);
-        } else {
-          logger.warn("Invalid date: " + log);
         }
       } catch (Exception e) {
-        e.printStackTrace();
+        logger.error(e.getMessage(), e);
       }
     }
     NativeQueue.getInstance().addAll(events);

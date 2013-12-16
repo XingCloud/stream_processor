@@ -1,8 +1,6 @@
 package com.xingcloud.stream.queue;
 
 import com.xingcloud.stream.model.StreamLogContent;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -13,12 +11,10 @@ import java.util.Queue;
  * User: Wang Yufei
  * Date: 13-10-28
  * Time: 下午5:11
- * To change this template use File | Settings | File Templates.
  */
 public class NativeQueue {
-  private static Log LOG = LogFactory.getLog(NativeQueue.class);
 
-  private Queue<StreamLogContent> queue = new LinkedList();
+  private Queue<StreamLogContent> queue = new LinkedList<StreamLogContent>();
 
   private static NativeQueue nativeQueue = new NativeQueue();
 

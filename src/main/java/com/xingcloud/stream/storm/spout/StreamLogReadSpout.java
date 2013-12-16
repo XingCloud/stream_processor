@@ -10,8 +10,6 @@ import com.xingcloud.stream.model.StreamLogContent;
 import com.xingcloud.stream.queue.NativeQueue;
 import com.xingcloud.stream.storm.StreamProcessorConstants;
 import com.xingcloud.stream.tailer.StreamLogTailer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Logger;
 
 import java.net.InetAddress;
@@ -68,6 +66,7 @@ public class StreamLogReadSpout extends BaseRichSpout {
     if (log != null) {
       Values values = new Values(log);
       _collector.emit(values);
+      //todo: no ack?
     }
   }
 

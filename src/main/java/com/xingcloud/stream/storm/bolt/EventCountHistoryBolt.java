@@ -25,6 +25,7 @@ public class EventCountHistoryBolt extends BaseBasicBolt {
     Thread ecuThread = new Thread(ecu);
     ecuThread.start();
     logger.info("EventCountHistoryBolt init bolt finish!");
+    //todo: 下面的需要吗?
     super.prepare(stormConf, context);
   }
 
@@ -36,6 +37,7 @@ public class EventCountHistoryBolt extends BaseBasicBolt {
     long date = TimeUtil.getDay(ts);
     ecu.addEvent(pid, event, date);
     Values values = new Values(pid, event, date);
+    //todo: emit给谁？ no ack?
     collector.emit(values);
     logger.debug("Update count " + pid + "\t" + event + "\t" + date);
 

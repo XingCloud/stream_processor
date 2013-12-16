@@ -10,23 +10,12 @@ import java.io.Serializable;
 public class StreamLogContent implements Serializable {
 
   private String projectId;
-  private String originalId;
   private String event;
-  private long eventValue;
   private long timestamp;
 
-  public StreamLogContent(String projectId, String event, long eventValue, long timestamp) {
+  public StreamLogContent(String projectId, String event, long timestamp) {
     this.projectId = projectId;
     this.event = event;
-    this.eventValue = eventValue;
-    this.timestamp = timestamp;
-  }
-
-  public StreamLogContent(String projectId, String originalId, String event, long eventValue, long timestamp) {
-    this.projectId = projectId;
-    this.originalId = originalId;
-    this.event = event;
-    this.eventValue = eventValue;
     this.timestamp = timestamp;
   }
 
@@ -34,40 +23,12 @@ public class StreamLogContent implements Serializable {
     return projectId;
   }
 
-  public void setProjectId(String projectId) {
-    this.projectId = projectId;
-  }
-
-  public String getOriginalId() {
-    return originalId;
-  }
-
-  public void setOriginalId(String originalId) {
-    this.originalId = originalId;
-  }
-
   public String getEvent() {
     return event;
   }
 
-  public void setEvent(String event) {
-    this.event = event;
-  }
-
-  public long getEventValue() {
-    return eventValue;
-  }
-
-  public void setEventValue(long eventValue) {
-    this.eventValue = eventValue;
-  }
-
   public long getTimestamp() {
     return timestamp;
-  }
-
-  public void setTimestamp(long timestamp) {
-    this.timestamp = timestamp;
   }
 
   @Override
@@ -81,14 +42,8 @@ public class StreamLogContent implements Serializable {
 
     StreamLogContent that = (StreamLogContent) o;
 
-    if (!event.equals(that.event)) {
-      return false;
-    }
-    if (!projectId.equals(that.projectId)) {
-      return false;
-    }
+    return event.equals(that.event) && projectId.equals(that.projectId);
 
-    return true;
   }
 
   @Override
@@ -101,9 +56,7 @@ public class StreamLogContent implements Serializable {
   @Override public String toString() {
     return "StreamLog#" +
       "projectId='" + projectId + '\'' +
-      ", originalId='" + originalId + '\'' +
       ", event='" + event + '\'' +
-      ", eventValue=" + eventValue +
       ", timestamp=" + timestamp;
   }
 
@@ -112,6 +65,7 @@ public class StreamLogContent implements Serializable {
       return null;
     }
 
+    //todo: string.split performance poor?
     int defaultLogLength = 5, startPosition = 0, idx;
     String[] arr = new String[defaultLogLength];
     for (int i = 0; i < defaultLogLength; i++) {
@@ -120,11 +74,7 @@ public class StreamLogContent implements Serializable {
               stringLog.length()) : stringLog.substring(startPosition, idx);
       startPosition = idx + 1;
     }
-    return new StreamLogContent(arr[0], arr[2], Long.valueOf(arr[3]), Long.valueOf(arr[4]));
-  }
-
-  public static boolean isStremLogContent(Object obj) {
-    return obj instanceof StreamLogContent;
+    return new StreamLogContent(arr[0], arr[2], Long.valueOf(arr[4]));
   }
 
   public static void main(String[] args) {

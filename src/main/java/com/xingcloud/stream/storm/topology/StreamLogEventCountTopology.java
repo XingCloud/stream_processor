@@ -28,19 +28,29 @@ public class StreamLogEventCountTopology {
 
     TopologyBuilder builder = new TopologyBuilder();
 
-    builder.setSpout(toSpoutId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.spoutName), new StreamLogReadSpout(), 4);
-    builder.setBolt(toBoltId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.shuffleBoltName), new ShuffleBolt(), 4)
-            .shuffleGrouping(toSpoutId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.spoutName));
-    builder.setBolt(toBoltId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.historyCounterBoltName),
-            new EventCountHistoryBolt(), 4)
-            .fieldsGrouping(toBoltId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.shuffleBoltName),
-                    new Fields(StreamProcessorConstants.PID, StreamProcessorConstants.EVENT_NAME));
+    builder.setSpout(
+      toSpoutId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.spoutName),
+      new StreamLogReadSpout(), 4
+    );
 
+    builder.setBolt(
+      toBoltId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.shuffleBoltName),
+      new ShuffleBolt(), 4
+    ).shuffleGrouping(
+      toSpoutId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.spoutName));
+
+    builder.setBolt(
+      toBoltId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.historyCounterBoltName),
+      new EventCountHistoryBolt(), 4
+    ).fieldsGrouping(
+      toBoltId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.shuffleBoltName),
+      new Fields(StreamProcessorConstants.PID, StreamProcessorConstants.EVENT_NAME)
+    );
 
     StormTopology topology = builder.createTopology();
     logger.info("[TOPOLOGY] - Topoloty(" + StreamProcessorConstants.topoKeyword + ") created.");
     Config conf = new Config();
-    conf.setDebug(true);
+    conf.setDebug(false);
     if (args != null && args.length > 0 && args[0].equals(StreamProcessorConstants.topoKeyword)) {
       conf.setNumWorkers(4);
       StormSubmitter.submitTopology(args[0], conf, topology);
@@ -49,8 +59,7 @@ public class StreamLogEventCountTopology {
       cluster.submitTopology(StreamProcessorConstants.topoKeyword, conf, topology);
       Utils.sleep(10*1000);
       cluster.shutdown();
-      logger.info("CLuster was killed...");
-      cluster.shutdown();
+      logger.info("CLuster was killed.");
     }
 
   }
