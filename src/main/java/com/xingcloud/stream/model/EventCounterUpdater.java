@@ -37,7 +37,6 @@ public class EventCounterUpdater implements Runnable, Serializable{
         eachDateMap = new HashMap<Long, Map<String, Long>>();
         Map<String, Long> eachEventMap = new HashMap<String, Long>();
         eachEventMap.put(event, 1l);
-        totalEventNum++;
         eachDateMap.put(date, eachEventMap);
         eventCounterMap.put(pid, eachDateMap);
       } else {
@@ -45,19 +44,19 @@ public class EventCounterUpdater implements Runnable, Serializable{
         if (null == eachEventMap) {
           eachEventMap = new HashMap<String, Long>();
           eachEventMap.put(event, 1l);
-          totalEventNum++;
           eachDateMap.put(date, eachEventMap);
         } else {
           Long count = eachEventMap.get(event);
           if (null == count) {
             eachEventMap.put(event, 1l);
-            totalEventNum++;
           } else {
             eachEventMap.put(event, 1l+count);
           }
         }
       }
-      logger.debug("Current event number: " + totalEventNum);
+      totalEventNum++;
+      current = totalEventNum;
+      logger.debug("Current event number: " + current);
     } finally {
       lock.writeLock().unlock();
     }
