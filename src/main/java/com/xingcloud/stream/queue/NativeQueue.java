@@ -2,6 +2,7 @@ package com.xingcloud.stream.queue;
 
 import com.xingcloud.stream.model.StreamLogContent;
 
+import java.util.ArrayDeque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -14,7 +15,8 @@ import java.util.Queue;
  */
 public class NativeQueue {
 
-  private Queue<StreamLogContent> queue = new LinkedList<StreamLogContent>();
+  //ArrayDeque is likely to be fast than LinkedList
+  private Queue<StreamLogContent> queue = new ArrayDeque<StreamLogContent>();
 
   private static NativeQueue nativeQueue = new NativeQueue();
 
@@ -46,5 +48,35 @@ public class NativeQueue {
     return queue.peek();
   }
 
+  public static void main(String... args) {
+    Queue<StreamLogContent> q1 = new LinkedList<StreamLogContent>();
+    Queue<StreamLogContent> q2 = new ArrayDeque<StreamLogContent>();
+
+    long times = 100000;
+
+    long start = System.currentTimeMillis();
+    for (int i = 0; i < times; i++) {
+      q1.add(new StreamLogContent("test", "a.b.c.d.", start));
+    }
+    System.out.println(System.currentTimeMillis() - start);
+
+    start = System.currentTimeMillis();
+    for (int i = 0; i < times; i++) {
+      q1.poll();
+    }
+    System.out.println(System.currentTimeMillis() - start);
+
+    start = System.currentTimeMillis();
+    for (int i = 0; i < times; i++) {
+      q2.add(new StreamLogContent("test", "a.b.c.d.", start));
+    }
+    System.out.println(System.currentTimeMillis() - start);
+
+    start = System.currentTimeMillis();
+    for (int i = 0; i < times; i++) {
+      q2.poll();
+    }
+    System.out.println(System.currentTimeMillis() - start);
+  }
 
 }
