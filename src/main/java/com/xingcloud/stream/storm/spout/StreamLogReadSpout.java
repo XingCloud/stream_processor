@@ -12,10 +12,7 @@ import com.xingcloud.stream.storm.StreamProcessorConstants;
 import com.xingcloud.stream.tailer.StreamLogTailer;
 import org.apache.log4j.Logger;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * User: Z J Wu Date: 13-10-22 Time: 上午9:52 Package: com.xingcloud.storm.spout
@@ -26,16 +23,20 @@ public class StreamLogReadSpout extends BaseRichSpout {
 
   private SpoutOutputCollector _collector;
 
-  private String id;
-
+  @Override
   public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-    outputFieldsDeclarer.declare(new Fields(StreamProcessorConstants.EVENT_LOG));
+    outputFieldsDeclarer.declare(
+      new Fields(
+        StreamProcessorConstants.PID,
+        StreamProcessorConstants.EVENT_NAME,
+        StreamProcessorConstants.TS
+      )
+    );
   }
 
   @Override
   public void open(Map map, TopologyContext topologyContext, SpoutOutputCollector spoutOutputCollector) {
     this._collector = spoutOutputCollector;
-    this.id = UUID.randomUUID().toString();
 
     Thread tailerThread = new Thread() {
       @Override
@@ -44,37 +45,22 @@ public class StreamLogReadSpout extends BaseRichSpout {
         try {
           streamLogTailer.start();
         } catch (Exception e) {
-          e.printStackTrace();
+          logger.error(e.getMessage(), e);
         }
       }
     };
-    tailerThread.start();
-    try {
-      InetAddress address = InetAddress.getLocalHost();
-      logger.info("Init stream log tailer thread finish. Host: " + address.getHostName());
-    } catch (UnknownHostException e) {
-      e.printStackTrace();
-      logger.error(e);
-    }
 
-    logger.info("[SPOUT] - Spout inited(" + this.id + ").");
+    tailerThread.start();
   }
 
   @Override
   public void nextTuple() {
     StreamLogContent log = NativeQueue.getInstance().poll();
     if (log != null) {
-      Values values = new Values(log);
+      Values values = new Values(log.getProjectId(), log.getEvent(), log.getTimestamp());
       _collector.emit(values);
-      //todo: no ack?
     }
   }
-
-  @Override
-  public void fail(Object msgId) {
-    logger.error("[SPOUT] Message failed, put it to queue again.");
-  }
-
 
 }
 

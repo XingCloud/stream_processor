@@ -17,8 +17,8 @@ public class StreamLogTailer extends Tail{
   private static Logger logger = Logger.getLogger(StreamLogTailer.class);
 
   public static final String configPath = "/data/log/stream_config/";
-  private int MAX_SIZE = 20000;
-  private long SLEEP_INTERVAL = 1000;
+  private static final int MAX_SIZE = 20000;
+  private static final long SLEEP_INTERVAL = 1000;
 
   public StreamLogTailer(String configPath) {
     super(configPath);

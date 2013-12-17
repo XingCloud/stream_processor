@@ -4,11 +4,8 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.BasicOutputCollector;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseBasicBolt;
-import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
-import backtype.storm.tuple.Values;
 import com.xingcloud.stream.model.EventCounterUpdater;
-import com.xingcloud.stream.storm.StreamProcessorConstants;
 import com.xingcloud.stream.tailer.TimeUtil;
 import org.apache.log4j.Logger;
 
@@ -25,8 +22,6 @@ public class EventCountHistoryBolt extends BaseBasicBolt {
     Thread ecuThread = new Thread(ecu);
     ecuThread.start();
     logger.info("EventCountHistoryBolt init bolt finish!");
-    //todo: 下面的需要吗?
-    super.prepare(stormConf, context);
   }
 
   @Override
@@ -36,16 +31,9 @@ public class EventCountHistoryBolt extends BaseBasicBolt {
     long ts = (Long)tuple.getValue(2);
     long date = TimeUtil.getDay(ts);
     ecu.addEvent(pid, event, date);
-    Values values = new Values(pid, event, date);
-    //todo: emit给谁？ no ack?
-    collector.emit(values);
-    logger.debug("Update count " + pid + "\t" + event + "\t" + date);
-
   }
 
   @Override
   public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-    outputFieldsDeclarer.declare(new Fields(StreamProcessorConstants.PID,
-            StreamProcessorConstants.EVENT_NAME, StreamProcessorConstants.DATE));
   }
 }

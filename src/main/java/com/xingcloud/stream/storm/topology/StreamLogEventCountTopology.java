@@ -14,7 +14,6 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.utils.Utils;
 import com.xingcloud.stream.storm.StreamProcessorConstants;
 import com.xingcloud.stream.storm.bolt.EventCountHistoryBolt;
-import com.xingcloud.stream.storm.bolt.ShuffleBolt;
 import com.xingcloud.stream.storm.spout.StreamLogReadSpout;
 import org.apache.log4j.Logger;
 
@@ -34,16 +33,10 @@ public class StreamLogEventCountTopology {
     );
 
     builder.setBolt(
-      toBoltId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.shuffleBoltName),
-      new ShuffleBolt(), 4
-    ).shuffleGrouping(
-      toSpoutId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.spoutName));
-
-    builder.setBolt(
       toBoltId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.historyCounterBoltName),
       new EventCountHistoryBolt(), 4
     ).fieldsGrouping(
-      toBoltId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.shuffleBoltName),
+      toSpoutId(StreamProcessorConstants.topoKeyword, StreamProcessorConstants.spoutName),
       new Fields(StreamProcessorConstants.PID, StreamProcessorConstants.EVENT_NAME)
     );
 
