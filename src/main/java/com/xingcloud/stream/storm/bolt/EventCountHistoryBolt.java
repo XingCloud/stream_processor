@@ -6,7 +6,6 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Tuple;
 import com.xingcloud.stream.model.EventCounterUpdater;
-import com.xingcloud.stream.tailer.TimeUtil;
 import org.apache.log4j.Logger;
 
 import java.util.Map;
@@ -28,8 +27,7 @@ public class EventCountHistoryBolt extends BaseBasicBolt {
   public void execute(Tuple tuple, BasicOutputCollector collector) {
     String pid = (String)tuple.getValue(0);
     String event = (String)tuple.getValue(1);
-    long ts = (Long)tuple.getValue(2);
-    long date = TimeUtil.getDay(ts);
+    long date = (Long)tuple.getValue(2);
     ecu.addEvent(pid, event, date);
   }
 

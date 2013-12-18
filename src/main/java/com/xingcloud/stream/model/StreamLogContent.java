@@ -1,5 +1,7 @@
 package com.xingcloud.stream.model;
 
+import com.xingcloud.stream.tailer.TimeUtil;
+
 import static com.xingcloud.stream.storm.StreamProcessorConstants.EVENT_LOG_SEPARATOR;
 
 import java.io.Serializable;
@@ -11,12 +13,12 @@ public class StreamLogContent implements Serializable {
 
   private String projectId;
   private String event;
-  private long timestamp;
+  private long date;
 
   public StreamLogContent(String projectId, String event, long timestamp) {
     this.projectId = projectId;
     this.event = event;
-    this.timestamp = timestamp;
+    this.date = TimeUtil.getDay(timestamp);
   }
 
   public String getProjectId() {
@@ -27,8 +29,8 @@ public class StreamLogContent implements Serializable {
     return event;
   }
 
-  public long getTimestamp() {
-    return timestamp;
+  public long getDate() {
+    return date;
   }
 
   @Override
@@ -57,7 +59,7 @@ public class StreamLogContent implements Serializable {
     return "StreamLog#" +
       "projectId='" + projectId + '\'' +
       ", event='" + event + '\'' +
-      ", timestamp=" + timestamp;
+      ", date=" + date;
   }
 
   public static StreamLogContent build(String stringLog) {
@@ -65,7 +67,6 @@ public class StreamLogContent implements Serializable {
       return null;
     }
 
-    //todo: string.split performance poor?
     int defaultLogLength = 5, startPosition = 0, idx;
     String[] arr = new String[defaultLogLength];
     for (int i = 0; i < defaultLogLength; i++) {

@@ -53,7 +53,6 @@ public class StreamLogTailer extends Tail{
   }
 
   private boolean filterOut(StreamLogContent log) {
-    long logDay = TimeUtil.getDay(log.getTimestamp());
-    return logDay != this.day;
+    return log.getDate() != this.day;
   }
 }

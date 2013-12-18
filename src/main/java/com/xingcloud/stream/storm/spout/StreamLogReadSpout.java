@@ -29,7 +29,7 @@ public class StreamLogReadSpout extends BaseRichSpout {
       new Fields(
         StreamProcessorConstants.PID,
         StreamProcessorConstants.EVENT_NAME,
-        StreamProcessorConstants.TS
+        StreamProcessorConstants.DATE
       )
     );
   }
@@ -57,7 +57,7 @@ public class StreamLogReadSpout extends BaseRichSpout {
   public void nextTuple() {
     StreamLogContent log = NativeQueue.getInstance().poll();
     if (log != null) {
-      Values values = new Values(log.getProjectId(), log.getEvent(), log.getTimestamp());
+      Values values = new Values(log.getProjectId(), log.getEvent(), log.getDate());
       _collector.emit(values);
     }
   }
