@@ -1,97 +1,59 @@
 package com.xingcloud.stream.model;
 
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.xingcloud.mongo.MongoDBManager;
 import com.xingcloud.stream.storm.StreamProcessorConstants;
+import com.xingcloud.stream.utils.Tuple3;
 import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class EventCounterUpdater implements Runnable, Serializable{
   private static Logger logger = Logger.getLogger(EventCounterUpdater.class);
 
-  private static final int FLUSH_KEY_SIZE = 2000;
+  private static final int FLUSH_KEY_SIZE = 10000;
   private static final long FLUSH_INTERVAL = 5 * 60 * 1000;
   private static final long SLEEP_INTERVAL = 1000;
 
   private long totalEventNum = 0l;
   private long lastFlushTime = System.currentTimeMillis();
-  // project id -> (date -> (event -> count))
-  private Map<String, Map<Long, Map<String, Long>>> eventCounterMap = new HashMap<String, Map<Long, Map<String, Long>>>();
-  private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
+  //(project id, date, event) -> count
+  private Map<Tuple3<String , Long, String>, Long> eventCounterMap =
+    new HashMap<Tuple3<String, Long, String>, Long>();
 
   public EventCounterUpdater() {
   }
 
-  public long addEvent(String pid, String event, long date) {
-    long current = 0;
-    try {
-      lock.writeLock().lock();
-      Map<Long, Map<String, Long>> eachDateMap = eventCounterMap.get(pid);
-      if (null == eachDateMap) {
-        eachDateMap = new HashMap<Long, Map<String, Long>>();
-        Map<String, Long> eachEventMap = new HashMap<String, Long>();
-        eachEventMap.put(event, 1l);
-        eachDateMap.put(date, eachEventMap);
-        eventCounterMap.put(pid, eachDateMap);
-      } else {
-        Map<String, Long> eachEventMap = eachDateMap.get(date);
-        if (null == eachEventMap) {
-          eachEventMap = new HashMap<String, Long>();
-          eachEventMap.put(event, 1l);
-          eachDateMap.put(date, eachEventMap);
-        } else {
-          Long count = eachEventMap.get(event);
-          if (null == count) {
-            eachEventMap.put(event, 1l);
-          } else {
-            eachEventMap.put(event, 1l+count);
-          }
-        }
-      }
-      totalEventNum++;
-      current = totalEventNum;
-      logger.debug("Current event number: " + current);
-    } finally {
-      lock.writeLock().unlock();
+  public synchronized void addEvent(String pid, String event, long date) {
+    Tuple3<String, Long, String> tuple3 = new Tuple3<String, Long, String>(pid, date, event);
+    if (!eventCounterMap.containsKey(tuple3)) {
+      eventCounterMap.put(tuple3, 1L);
+    } else {
+      eventCounterMap.put(tuple3, eventCounterMap.get(tuple3) + 1L);
     }
-    return current;
+
+    totalEventNum++;
   }
 
-  public void flushToMongo() {
-    try {
-      lock.writeLock().lock();
-      logger.info("--------- Start to update mongodb. Current event number: " + totalEventNum + " ---------");
-      long st = System.nanoTime();
-      DBCollection coll = MongoDBManager.getInstance().getDB()
-              .getCollection(StreamProcessorConstants.EVENT_COUNTER_COLL);
+  private synchronized void flushToMongo() {
+    logger.info("--------- Start to update mongodb. Current event number: " + totalEventNum + " ---------");
 
-      for (Map.Entry<String, Map<Long, Map<String, Long>>> entry : eventCounterMap.entrySet()) {
-        String pid = entry.getKey();
-        Map<Long, Map<String, Long>> eachDateMap = entry.getValue();
-        for (Map.Entry<Long, Map<String, Long>> subEntry : eachDateMap.entrySet()) {
-          long date = subEntry.getKey();
-          Map<String, Long> eachEventMap = subEntry.getValue();
-          for (Map.Entry<String, Long> eventEntry : eachEventMap.entrySet()) {
-            String event = eventEntry.getKey();
-            long count = eventEntry.getValue();
-            updateMongo(pid, date, event, count, coll);
-          }
-        }
-      }
-      cleanUp();
-      logger.info("Update event count value to MongoDB finish. Taken: " + (System.nanoTime()-st)/1.0e9 + " sec");
-    } catch (Exception e) {
-      e.printStackTrace();
-      logger.error(e);
-    } finally {
-      lock.writeLock().unlock();
+    long start = System.currentTimeMillis();
+    DBCollection coll = MongoDBManager.getInstance()
+      .getDB().getCollection(StreamProcessorConstants.EVENT_COUNTER_COLL);
+
+    for (Map.Entry<Tuple3<String, Long, String>, Long> entry : eventCounterMap.entrySet()) {
+      Tuple3<String, Long, String> tuple3 = entry.getKey();
+      updateMongo(tuple3.first, tuple3.second, tuple3.third, entry.getValue(), coll);
     }
+
+    logger.info("Update event count value to MongoDB finish. Taken: " + (System.currentTimeMillis() - start) + "ms.");
+
+    cleanUp();
   }
 
   private void cleanUp() {
@@ -126,21 +88,13 @@ public class EventCounterUpdater implements Runnable, Serializable{
 
   private void printMap() {
     StringBuilder summary = new StringBuilder("--- Summary:\n");
-    for (Map.Entry<String, Map<Long, Map<String, Long>>> entry : eventCounterMap.entrySet()) {
-      String pid = entry.getKey();
-      summary.append("PID: ").append(pid).append(":\n");
-      Map<Long, Map<String, Long>> eachDateMap = entry.getValue();
-      for (Map.Entry<Long, Map<String, Long>> subEntry : eachDateMap.entrySet()) {
-        long date = subEntry.getKey();
-        summary.append("Date: ").append(date).append(":\n");
-        Map<String, Long> eachEventMap = subEntry.getValue();
-        for (Map.Entry<String, Long> eventEntry : eachEventMap.entrySet()) {
-          String event = eventEntry.getKey();
-          long count = eventEntry.getValue();
-          summary.append(event).append(": ").append(count).append("\n");
-        }
-      }
+    for (Map.Entry<Tuple3<String, Long, String>, Long> entry : eventCounterMap.entrySet()) {
+      Tuple3<String, Long, String> tuple3 = entry.getKey();
+      summary.append("PID: ").append(tuple3.first).append(":\n");
+      summary.append("Date: ").append(tuple3.second).append(":\n");
+      summary.append(tuple3.third).append(": ").append(entry.getValue()).append("\n");
     }
+
     logger.info(summary.toString());
   }
 
@@ -161,7 +115,4 @@ public class EventCounterUpdater implements Runnable, Serializable{
         }
     }
   }
-
-
-
 }
