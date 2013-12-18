@@ -14,7 +14,7 @@ import java.util.Map;
 public class EventCounterUpdater implements Runnable, Serializable{
   private static Logger logger = Logger.getLogger(EventCounterUpdater.class);
 
-  private static final int FLUSH_KEY_SIZE = 10000;
+  private static final int FLUSH_KEY_SIZE = 5000;
   private static final long FLUSH_INTERVAL = 5 * 60 * 1000;
   private static final long SLEEP_INTERVAL = 2000;
 
