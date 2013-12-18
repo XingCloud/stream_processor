@@ -16,9 +16,8 @@ public class EventCounterUpdater implements Runnable, Serializable{
 
   private static final int FLUSH_KEY_SIZE = 10000;
   private static final long FLUSH_INTERVAL = 5 * 60 * 1000;
-  private static final long SLEEP_INTERVAL = 1000;
+  private static final long SLEEP_INTERVAL = 2000;
 
-  private long totalEventNum = 0l;
   private long lastFlushTime = System.currentTimeMillis();
 
   //(project id, date, event) -> count
@@ -35,12 +34,10 @@ public class EventCounterUpdater implements Runnable, Serializable{
     } else {
       eventCounterMap.put(tuple3, eventCounterMap.get(tuple3) + 1L);
     }
-
-    totalEventNum++;
   }
 
   private synchronized void flushToMongo() {
-    logger.info("--------- Start to update mongodb. Current event number: " + totalEventNum + " ---------");
+    logger.info("--------- Start to update mongodb. Current map size: " + eventCounterMap.size() + " ---------");
 
     long start = System.currentTimeMillis();
     DBCollection coll = MongoDBManager.getInstance()
@@ -53,12 +50,8 @@ public class EventCounterUpdater implements Runnable, Serializable{
 
     logger.info("Update event count value to MongoDB finish. Taken: " + (System.currentTimeMillis() - start) + "ms.");
 
-    cleanUp();
-  }
-
-  private void cleanUp() {
-    totalEventNum = 0;
     eventCounterMap.clear();
+    lastFlushTime = System.currentTimeMillis();
   }
 
   private void updateMongo(String pid, long date, String event, long count, DBCollection coll) {
@@ -86,7 +79,11 @@ public class EventCounterUpdater implements Runnable, Serializable{
     return updateQuery;
   }
 
-  private void printMap() {
+  private synchronized int getMapSize() {
+    return eventCounterMap.size();
+  }
+
+  private synchronized void printMap() {
     StringBuilder summary = new StringBuilder("--- Summary:\n");
     for (Map.Entry<Tuple3<String, Long, String>, Long> entry : eventCounterMap.entrySet()) {
       Tuple3<String, Long, String> tuple3 = entry.getKey();
@@ -101,18 +98,19 @@ public class EventCounterUpdater implements Runnable, Serializable{
   @Override
   public void run() {
     logger.info("Start mongodb update thread " + Thread.currentThread().getName());
+
     while (true) {
-        if (((System.currentTimeMillis()-lastFlushTime)>FLUSH_INTERVAL && eventCounterMap.size()!=0) ||
-                (totalEventNum > FLUSH_KEY_SIZE)) {
-          flushToMongo();
-          lastFlushTime = System.currentTimeMillis();
-        }
-        try {
-          Thread.sleep(SLEEP_INTERVAL);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-          logger.error(e);
-        }
+      int size = getMapSize();
+      long current = System.currentTimeMillis();
+      if (((current - lastFlushTime) > FLUSH_INTERVAL && size > 0) || size > FLUSH_KEY_SIZE) {
+        flushToMongo();
+      }
+
+      try {
+        Thread.sleep(SLEEP_INTERVAL);
+      } catch (InterruptedException e) {
+        logger.error(e.getMessage(), e);
+      }
     }
   }
 }
