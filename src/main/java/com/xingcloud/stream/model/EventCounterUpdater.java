@@ -57,20 +57,25 @@ public class EventCounterUpdater implements Runnable, Serializable{
   private void updateMongo(String pid, long date, String event, long count, DBCollection coll) {
     BasicDBObject searchQuery = getSearchQuery(pid, event, date);
     BasicDBObject updateQuery = getUpdateQuery(count);
-    logger.debug("Update json: " + searchQuery + "\t" + updateQuery);
+//    logger.debug("Update json: " + searchQuery + "\t" + updateQuery);
     coll.update(searchQuery, updateQuery, true, false);
   }
 
   private BasicDBObject getSearchQuery(String pid, String event, long date) {
     String[] fields = event.split("\\.");
-    BasicDBObject searchQuery = new BasicDBObject();
-    for (int i=0; i<fields.length; i++) {
-      searchQuery.put("l"+i, fields[i]);
+
+    BasicDBObject query = new BasicDBObject();
+    query.append("project_id", pid);
+    query.append("date", date);
+    for (int i = 0; i < fields.length; i++) {
+      query.append("l" + i, fields[i]);
     }
-    //todo: 查询条件不准确
-    searchQuery.put("date", date);
-    searchQuery.put("project_id", pid);
-    return searchQuery;
+    //最多6层事件
+    for (int i = fields.length; i < 6; i++) {
+      query.append("l" + i, new BasicDBObject("$exists", false));
+    }
+
+    return query;
   }
 
   private BasicDBObject getUpdateQuery(long count) {
@@ -112,5 +117,16 @@ public class EventCounterUpdater implements Runnable, Serializable{
         logger.error(e.getMessage(), e);
       }
     }
+  }
+
+  public static void main(String... args) {
+    String event = "a.b.c.d.";
+    String[] segments = event.split("\\.");
+    for (String s : segments) {
+      System.out.println(">>>>> " + s);
+    }
+
+    EventCounterUpdater ecu = new EventCounterUpdater();
+    System.out.println(ecu.getSearchQuery("test", event, 20131219L));
   }
 }
